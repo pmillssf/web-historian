@@ -27,16 +27,18 @@ exports.initialize = function(pathsObj) {
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(callback) { // return an array of domain names
-  callback (fs.readFile(paths.list, 'utf8', function(err, list) {
+  fs.readFile(exports.paths.list, 'utf8', function(err, list) {
     if (err) {
-      throw err;
+      console.log(err);
     }
-    return list.split('\n');
-  }));
+    callback(list.split('\n'));
+  });
 };
 
 exports.isUrlInList = function(targetUrl, callback) { // true/false
-
+  return exports.readListOfUrls(function(listArray) {
+    callback(_.contains(listArray, targetUrl));
+  });
 };
 
 exports.addUrlToList = function(url, callback) {
