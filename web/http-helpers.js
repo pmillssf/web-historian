@@ -1,5 +1,7 @@
 var path = require('path');
 var fs = require('fs');
+var url = require('url');
+
 var archive = require('../helpers/archive-helpers');
 
 exports.headers = {
@@ -11,10 +13,16 @@ exports.headers = {
 };
 
 
-exports.writeResponse = function(res, statusCode, data) {
+exports.writeWebPage = function(req, res, path, statusCode) {
   var statusCode = statusCode || 200;
-  res.writeHead(statusCode, headers);
-  res.end(data);
+  fs.readFile(path, function(err, html) {
+    if (err) {
+      throw err;
+    }
+    res.writeHeader(statusCode, {'Content-Type': 'text/html'});
+    res.write(html);
+    res.end();
+  });
 };
 
 exports.collectUrl = function(req, callback) {
@@ -30,11 +38,17 @@ exports.collectUrl = function(req, callback) {
 
 exports.actions = {
   'GET': function(req, res) {
-    // check if url already in list
-    if (isUrlInList) {
-      // 
-      
-    }
+    var route = url.parse(req.url).pathname.slice(1);
+    archive.isUrlInList(route, function(boolean) {
+      if (boolean) {
+        // var archivedSite = path.join(__dirname, '../archives/sites' + '/' + route);
+        var archivedSite = '/Users/student/Desktop/hrsf73-web-historian/test/testdata/sites/' + route;
+        exports.writeWebPage(req, res, archivedSite);
+      } else {
+        console.log(archive.paths.index);
+        exports.writeWebPage(req, res, archive.paths.index, 302);
+      }
+    });
   }
 };
 
