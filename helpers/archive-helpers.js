@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -35,17 +36,28 @@ exports.readListOfUrls = function(callback) { // return an array of domain names
   });
 };
 
-exports.isUrlInList = function(targetUrl, callback) { // true/false
+exports.isUrlInList = function(targetUrl, callback) {
   return exports.readListOfUrls(function(listArray) {
-    callback(_.contains(listArray, targetUrl));
+    callback(_.contains(listArray, targetUrl)); // callback(boolean)
   });
 };
 
 exports.addUrlToList = function(url, callback) {
+  fs.appendFile(exports.paths.list, url + '\n', function(err, file) {
+    callback();
+  });
 };
 
 exports.isUrlArchived = function(url, callback) {
+  var sitePath = path.join(exports.paths.archivedSites, url);
+  fs.exists(sitePath, function(exists) {
+    callback(exists);
+  });
 };
 
 exports.downloadUrls = function(urls) {
+  _.each(urls, function(url) {
+    if (!url) { return; }
+    request('http://' + url).pipe(fs.createWriteStream(exports.paths.archivedSites + '/' + url));
+  });
 };
